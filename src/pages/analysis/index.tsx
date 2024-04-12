@@ -2,15 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useRequest } from '@/hooks';
 import ChartsCard from './libs/ChartsCard';
 import styles from './style.module.scss';
-import { message, Select } from 'antd';
+import { message, Select, Spin } from 'antd';
 import dayjs, { Dayjs } from 'dayjs';
 
 export interface Propertie {
-  date: string;
-  text: string;
+  users: string[];
   tags: string[];
+  date: string;
   money: number;
-  event: string;
+  desc: string;
 }
 export type Properties = Propertie[];
 
@@ -24,8 +24,6 @@ interface FilterMap {
   thisMonth: FilterOption;
   pastMonth: FilterOption;
   thisYear: FilterOption;
-  pastYear: FilterOption;
-  all: FilterOption;
 }
 const getDateFilterDefault = (key: string) => ({
   property: 'Date',
@@ -70,14 +68,6 @@ const filterMap: FilterMap = {
   thisYear: {
     filter: getDateFilterRange(dayjs().startOf('year'), dayjs()),
     label: '本年'
-  },
-  pastYear: {
-    filter: getDateFilterDefault('past_year'),
-    label: '最近一年'
-  },
-  all: {
-    filter: getDateFilterRange(dayjs('2023-01-01'), dayjs()),
-    label: '全部'
   }
 };
 const filterOptions: { label: string; value: string }[] = Object.entries(
@@ -108,27 +98,28 @@ const Analysis = () => {
           ]
         });
         if (!err) {
-          result.push(
-            ...data.results.map(({ properties }: any) => {
-              const date: string = properties.Date.date.start;
-              const text: string = properties.Name.title.find(
-                (item: any) => item.type === 'text'
-              )?.plain_text;
-              const tags = properties.Tags.multi_select.map(
-                (item: any) => item.name
-              );
-              let money: number = +(text.match(/[\d\.]+/)?.[0] || 0);
-              let event: string = text.replace(/[\d\.]+/, '').trim();
+          data.results.map(({ properties }: any) => {
+            const users = properties.Users.multi_select.map(
+              (item: any) => item.name
+            );
+            const tags = properties.Tags.multi_select.map(
+              (item: any) => item.name
+            );
 
-              return {
-                date,
-                text,
-                tags,
-                money,
-                event
-              };
-            })
-          );
+            const date: string = properties.Date.date.start;
+            const desc: string = properties.Name.title.find(
+              (item: any) => item.type === 'text'
+            )?.plain_text;
+            const money: number = properties.Money.number;
+
+            result.push({
+              users,
+              tags,
+              date,
+              money,
+              desc
+            });
+          });
           if (data.has_more) {
             await fetchData(data.next_cursor);
           }
@@ -141,9 +132,9 @@ const Analysis = () => {
     })();
   }, [filterType]);
 
-  const multipleTags: string[] = [];
+  const userTags: string[] = [];
   propertieData.forEach(item => {
-    multipleTags.push(...item.tags);
+    userTags.push(...item.users);
   });
 
   return (
@@ -155,15 +146,23 @@ const Analysis = () => {
         options={filterOptions}
         style={{ width: '100%' }}
       />
-      <ChartsCard title="总览" data={propertieData} loading={loading} />
-      {[...new Set(multipleTags)].map(tag => (
-        <ChartsCard
-          key={tag}
-          title={`${tag}的支出`}
-          data={propertieData.filter(item => item.tags[0] === tag)}
-          loading={loading}
-        />
-      ))}
+      {propertieData.length ? (
+        <>
+          <ChartsCard title="总览" data={propertieData} loading={loading} />
+          {[...new Set(userTags)].map(user => (
+            <ChartsCard
+              key={user}
+              title={`${user}的支出`}
+              data={propertieData.filter(item => item.users[0] === user)}
+              loading={loading}
+            />
+          ))}
+        </>
+      ) : (
+        <Spin spinning>
+          <div style={{ height: 200 }} />
+        </Spin>
+      )}
     </div>
   );
 };
