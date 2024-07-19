@@ -28,7 +28,7 @@ module.exports = env => {
       allowedHosts: 'all',
       proxy: {
         '/api/': {
-          target: 'http://localhost:8888',
+          target: 'http://localhost:3002',
           pathRewrite: { '^/api/': '' }
         }
       },

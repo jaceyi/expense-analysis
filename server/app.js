@@ -6,13 +6,12 @@ const bodyParser = require('body-parser');
 const app = express();
 
 const notionApiKey = process.env.NOTION_API_KEY;
-const databaseId = process.env.NOTION_DATABASE_ID;
 
 app.post('/databases', bodyParser.json(), async (req, res) => {
   try {
     const response = await axios({
       method: 'post',
-      url: `https://api.notion.com/v1/databases/${databaseId}/query`,
+      url: 'https://api.notion.com/v1/databases/334aa5a9-fd2f-4f26-8f8f-610a07fb772b/query',
       headers: {
         'Content-Type': 'application/json',
         'Notion-Version': '2022-06-28',
@@ -28,6 +27,6 @@ app.post('/databases', bodyParser.json(), async (req, res) => {
   }
 });
 
-app.listen(8888, () => {
-  console.log('Server is listening on port 8888');
+app.listen(3002, () => {
+  console.log('Server is listening on port 3002');
 });

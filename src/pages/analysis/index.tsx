@@ -128,7 +128,12 @@ const Analysis = () => {
         }
       };
       await fetchData();
-      setPropertieData(result);
+      setPropertieData(
+        result.map(item => ({
+          ...item,
+          date: dayjs(item.date).format('YY-MM-DD')
+        }))
+      );
     })();
   }, [filterType]);
 
@@ -148,13 +153,19 @@ const Analysis = () => {
       />
       {propertieData.length ? (
         <>
-          <ChartsCard title="总览" data={propertieData} loading={loading} />
+          <ChartsCard
+            title="总览"
+            data={propertieData}
+            loading={loading}
+            filterType={filterType}
+          />
           {[...new Set(userTags)].map(user => (
             <ChartsCard
               key={user}
               title={`${user}的支出`}
               data={propertieData.filter(item => item.users[0] === user)}
               loading={loading}
+              filterType={filterType}
             />
           ))}
         </>
